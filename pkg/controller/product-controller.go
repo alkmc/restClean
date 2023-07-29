@@ -48,7 +48,7 @@ func (c *productController) GetByID(w http.ResponseWriter, r *http.Request) {
 	if p == nil {
 		p, err := c.findProduct(id)
 		if err != nil {
-			errs := serviceerr.Input("No product found!")
+			errs := serviceerr.Input("no product found!")
 			errs.Encode(w)
 			return
 		}
@@ -69,7 +69,7 @@ func (c *productController) Get(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(products) == 0 {
 		confirmation := &serviceerr.ServiceError{
-			Code: "OK", Message: "No products found",
+			Code: "ok", Message: "no products found",
 		}
 		renderer.JSON(w, http.StatusOK, confirmation)
 		return
@@ -92,7 +92,7 @@ func (c *productController) Add(w http.ResponseWriter, r *http.Request) {
 
 	result, err := c.productService.Create(&p)
 	if err != nil {
-		errs := serviceerr.Internal("Error saving the product")
+		errs := serviceerr.Internal("error saving the product")
 		errs.Encode(w)
 		return
 	}
@@ -113,7 +113,7 @@ func (c *productController) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := c.findProduct(id); err != nil {
-		errs := serviceerr.Input("Unable to delete product, which already does not exist")
+		errs := serviceerr.Input("unable to delete product, which already does not exist")
 		errs.Encode(w)
 		return
 	}
@@ -129,7 +129,7 @@ func (c *productController) Delete(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	c.productCache.Expire(ctx, idStr)
 	confirmation := &serviceerr.ServiceError{
-		Code: "OK", Message: "Product deleted",
+		Code: "ok", Message: "product deleted",
 	}
 	renderer.JSON(w, http.StatusOK, confirmation)
 }
@@ -143,7 +143,7 @@ func (c *productController) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := c.findProduct(id); err != nil {
-		errs := serviceerr.Input("Unable to update product, which does not exist")
+		errs := serviceerr.Input("unable to update product, which does not exist")
 		errs.Encode(w)
 		return
 	}
@@ -159,7 +159,7 @@ func (c *productController) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if p.ID != id {
-		errs := serviceerr.Input("UUID is guaranteed to be unique and shall be not changed")
+		errs := serviceerr.Input("uuid is guaranteed to be unique and shall be not changed")
 		errs.Encode(w)
 		return
 	}
