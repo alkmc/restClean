@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/alkmc/restClean/internal/renderer"
 	"github.com/alkmc/restClean/internal/serviceerr"
@@ -14,6 +16,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
+
+const timeout = 20 * time.Millisecond
 
 type productController struct {
 	productService   service.Service
@@ -38,7 +42,9 @@ func (c *productController) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p := c.productCache.Get(idStr)
+	ctx, cancel := context.WithTimeout(r.Context(), timeout)
+	defer cancel()
+	p := c.productCache.Get(ctx, idStr)
 	if p == nil {
 		p, err := c.findProduct(id)
 		if err != nil {
@@ -46,7 +52,7 @@ func (c *productController) GetByID(w http.ResponseWriter, r *http.Request) {
 			errs.Encode(w)
 			return
 		}
-		c.productCache.Set(idStr, p)
+		c.productCache.Set(ctx, idStr, p)
 		p.JSON(w)
 	} else {
 		p.JSON(w)
@@ -90,7 +96,10 @@ func (c *productController) Add(w http.ResponseWriter, r *http.Request) {
 		errs.Encode(w)
 		return
 	}
-	c.productCache.Set(p.ID.String(), &p)
+
+	ctx, cancel := context.WithTimeout(r.Context(), timeout)
+	defer cancel()
+	c.productCache.Set(ctx, p.ID.String(), &p)
 
 	renderer.JSON(w, http.StatusCreated, result)
 }
@@ -115,7 +124,10 @@ func (c *productController) Delete(w http.ResponseWriter, r *http.Request) {
 		err.Encode(w)
 		return
 	}
-	c.productCache.Expire(idStr)
+
+	ctx, cancel := context.WithTimeout(r.Context(), timeout)
+	defer cancel()
+	c.productCache.Expire(ctx, idStr)
 	confirmation := &serviceerr.ServiceError{
 		Code: "OK", Message: "Product deleted",
 	}
