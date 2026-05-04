@@ -15,7 +15,6 @@ import (
 	"github.com/alkmc/restClean/pkg/repository"
 	"github.com/alkmc/restClean/pkg/service"
 	"github.com/alkmc/restClean/pkg/validator"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -47,8 +46,8 @@ func TestGetProductByID(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	// assign http Handler function
-	r := chi.NewRouter()
-	r.Get("/product/{id}", pController.GetByID)
+	r := http.NewServeMux()
+	r.HandleFunc("GET /product/{id}", pController.GetByID)
 
 	// dispatch the http request
 	r.ServeHTTP(resp, req)
@@ -86,8 +85,8 @@ func TestGetProductByIncorrectID(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	// assign http handler function
-	r := chi.NewRouter()
-	r.Get("/product/{id}", pController.GetByID)
+	r := http.NewServeMux()
+	r.HandleFunc("GET /product/{id}", pController.GetByID)
 
 	// dispatch the http request
 	r.ServeHTTP(resp, req)
@@ -109,7 +108,7 @@ func TestGetProductByIncorrectID(t *testing.T) {
 func TestGetNotExistingProduct(t *testing.T) {
 	const (
 		errCode = "invalid input error"
-		errMsg  = "No product found!"
+		errMsg  = "no product found!"
 		path    = "/product/%v"
 	)
 	// insert new product
@@ -122,8 +121,8 @@ func TestGetNotExistingProduct(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	// assign http handler function
-	r := chi.NewRouter()
-	r.Get("/product/{id}", pController.GetByID)
+	r := http.NewServeMux()
+	r.HandleFunc("GET /product/{id}", pController.GetByID)
 
 	// dispatch the http request
 	r.ServeHTTP(resp, req)
@@ -153,8 +152,8 @@ func TestGetProducts(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	// assign http handler function
-	r := chi.NewRouter()
-	r.Get("/product", pController.Get)
+	r := http.NewServeMux()
+	r.HandleFunc("GET /product", pController.Get)
 
 	// dispatch the http request
 	r.ServeHTTP(resp, req)
@@ -187,8 +186,8 @@ func TestGetNotExistingProducts(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	// assign http handler function
-	r := chi.NewRouter()
-	r.Get("/product", pController.Get)
+	r := http.NewServeMux()
+	r.HandleFunc("GET /product", pController.Get)
 
 	// dispatch the http request
 	r.ServeHTTP(resp, req)
@@ -228,8 +227,8 @@ func TestAddProduct(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	// assign http handler function
-	r := chi.NewRouter()
-	r.Post("/product", pController.Add)
+	r := http.NewServeMux()
+	r.HandleFunc("POST /product", pController.Add)
 
 	// dispatch the http request
 	r.ServeHTTP(resp, req)
@@ -275,8 +274,8 @@ func TestAddProductWithExtraField(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	// assign http handler function
-	r := chi.NewRouter()
-	r.Post("/product", pController.Add)
+	r := http.NewServeMux()
+	r.HandleFunc("POST /product", pController.Add)
 
 	// dispatch the http request
 	r.ServeHTTP(resp, req)
@@ -319,8 +318,8 @@ func TestAddProductWithNegativePrice(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	// assign http handler function
-	r := chi.NewRouter()
-	r.Post("/product", pController.Add)
+	r := http.NewServeMux()
+	r.HandleFunc("POST /product", pController.Add)
 
 	// dispatch the http request
 	r.ServeHTTP(resp, req)
@@ -355,8 +354,8 @@ func TestDeleteProduct(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	// assign http handler function
-	r := chi.NewRouter()
-	r.Delete("/product/{id}", pController.Delete)
+	r := http.NewServeMux()
+	r.HandleFunc("DELETE /product/{id}", pController.Delete)
 
 	// dispatch the http request
 	r.ServeHTTP(resp, req)
@@ -393,8 +392,8 @@ func TestDeleteNonExistingProduct(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	// assign http handler function
-	r := chi.NewRouter()
-	r.Delete("/product/{id}", pController.Delete)
+	r := http.NewServeMux()
+	r.HandleFunc("DELETE /product/{id}", pController.Delete)
 
 	// dispatch the http request
 	r.ServeHTTP(resp, req)
@@ -441,8 +440,8 @@ func TestUpdateProduct(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	// assign http handler function
-	r := chi.NewRouter()
-	r.Put("/product/{id}", pController.Update)
+	r := http.NewServeMux()
+	r.HandleFunc("PUT /product/{id}", pController.Update)
 
 	r.ServeHTTP(resp, req)
 	checkResponseCode(t, http.StatusOK, resp.Code)

@@ -24,7 +24,7 @@ var (
 	productCache      = cache.NewRedis(redisHost, redisDB, cacheExpiration)
 	productValidator  = validator.NewValidator()
 	productController = controller.NewController(productService, productCache, productValidator)
-	httpRouter        = router.NewChiRouter()
+	httpRouter        = router.NewRouter()
 )
 
 func main() {

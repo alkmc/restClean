@@ -12,7 +12,6 @@ import (
 	"github.com/alkmc/restClean/pkg/entity"
 	"github.com/alkmc/restClean/pkg/service"
 	"github.com/alkmc/restClean/pkg/validator"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -34,7 +33,7 @@ func NewController(s service.Service, c cache.Cache, v validator.Validator) Cont
 }
 
 func (c *productController) GetByID(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
+	idStr := r.PathValue("id")
 	id, err := c.validID(idStr)
 	if err != nil {
 		err.Encode(w)
@@ -108,7 +107,7 @@ func (c *productController) Add(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *productController) Delete(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
+	idStr := r.PathValue("id")
 	id, err := c.validID(idStr)
 	if err != nil {
 		err.Encode(w)
@@ -139,7 +138,7 @@ func (c *productController) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *productController) Update(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
+	idStr := r.PathValue("id")
 	id, err := c.validID(idStr)
 	if err != nil {
 		err.Encode(w)
