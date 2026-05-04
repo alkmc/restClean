@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -9,18 +10,17 @@ import (
 	"github.com/alkmc/restClean/pkg/entity"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type pgRepository struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
 // NewPG creates a new PostgreSQL repository
 func NewPG() Repository {
 	dbConn := getDbConn()
-	pdb, err := sqlx.Open("postgres", dbConn)
+	pdb, err := sql.Open("pgx", dbConn)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,18 +44,19 @@ func (pg *pgRepository) CloseDB() {
 }
 
 func (pg *pgRepository) Save(ctx context.Context, p *entity.Product) (*entity.Product, error) {
-	tx, err := pg.db.Begin()
+	tx, err := pg.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	stmt, err := tx.Prepare(queryInsert)
+	stmt, err := tx.PrepareContext(ctx, queryInsert)
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 
-	if _, err := stmt.Exec(p.ID, p.Name, p.Price); err != nil {
+	if _, err := stmt.ExecContext(ctx, p.ID, p.Name, p.Price); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -66,7 +67,7 @@ func (pg *pgRepository) Save(ctx context.Context, p *entity.Product) (*entity.Pr
 }
 
 func (pg *pgRepository) FindByID(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
-	row := pg.db.QueryRow(queryGetByID, id)
+	row := pg.db.QueryRowContext(ctx, queryGetByID, id)
 
 	var p entity.Product
 	if err := row.Scan(&p.ID, &p.Name, &p.Price); err != nil {
@@ -76,7 +77,7 @@ func (pg *pgRepository) FindByID(ctx context.Context, id uuid.UUID) (*entity.Pro
 }
 
 func (pg *pgRepository) FindAll(ctx context.Context) ([]entity.Product, error) {
-	rows, err := pg.db.Query(queryGetAll)
+	rows, err := pg.db.QueryContext(ctx, queryGetAll)
 	if err != nil {
 		return nil, err
 	}
@@ -99,17 +100,19 @@ func (pg *pgRepository) FindAll(ctx context.Context) ([]entity.Product, error) {
 }
 
 func (pg *pgRepository) Update(ctx context.Context, p *entity.Product) error {
-	tx, err := pg.db.Begin()
+	tx, err := pg.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
-	stmt, err := tx.Prepare(queryUpdate)
+
+	stmt, err := tx.PrepareContext(ctx, queryUpdate)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	if _, err := stmt.Exec(p.ID, p.Name, p.Price); err != nil {
+	if _, err := stmt.ExecContext(ctx, p.ID, p.Name, p.Price); err != nil {
+		tx.Rollback()
 		return err
 	}
 	if err := tx.Commit(); err != nil {
@@ -119,17 +122,19 @@ func (pg *pgRepository) Update(ctx context.Context, p *entity.Product) error {
 }
 
 func (pg *pgRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	tx, err := pg.db.Begin()
+	tx, err := pg.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
-	stmt, err := tx.Prepare(queryDelete)
+
+	stmt, err := tx.PrepareContext(ctx, queryDelete)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	if _, err = stmt.Exec(id); err != nil {
+	if _, err = stmt.ExecContext(ctx, id); err != nil {
+		tx.Rollback()
 		return err
 	}
 	if err := tx.Commit(); err != nil {
