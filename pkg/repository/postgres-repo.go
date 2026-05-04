@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -42,7 +43,7 @@ func (pg *pgRepository) CloseDB() {
 	log.Println("connection to db closed")
 }
 
-func (pg *pgRepository) Save(p *entity.Product) (*entity.Product, error) {
+func (pg *pgRepository) Save(ctx context.Context, p *entity.Product) (*entity.Product, error) {
 	tx, err := pg.db.Begin()
 	if err != nil {
 		return nil, err
@@ -52,8 +53,8 @@ func (pg *pgRepository) Save(p *entity.Product) (*entity.Product, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer stmt.Close()
+
 	if _, err := stmt.Exec(p.ID, p.Name, p.Price); err != nil {
 		return nil, err
 	}
@@ -64,7 +65,7 @@ func (pg *pgRepository) Save(p *entity.Product) (*entity.Product, error) {
 	return p, nil
 }
 
-func (pg *pgRepository) FindByID(id uuid.UUID) (*entity.Product, error) {
+func (pg *pgRepository) FindByID(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
 	row := pg.db.QueryRow(queryGetByID, id)
 
 	var p entity.Product
@@ -74,7 +75,7 @@ func (pg *pgRepository) FindByID(id uuid.UUID) (*entity.Product, error) {
 	return &p, nil
 }
 
-func (pg *pgRepository) FindAll() ([]entity.Product, error) {
+func (pg *pgRepository) FindAll(ctx context.Context) ([]entity.Product, error) {
 	rows, err := pg.db.Query(queryGetAll)
 	if err != nil {
 		return nil, err
@@ -97,7 +98,7 @@ func (pg *pgRepository) FindAll() ([]entity.Product, error) {
 	return products, nil
 }
 
-func (pg *pgRepository) Update(p *entity.Product) error {
+func (pg *pgRepository) Update(ctx context.Context, p *entity.Product) error {
 	tx, err := pg.db.Begin()
 	if err != nil {
 		return err
@@ -117,7 +118,7 @@ func (pg *pgRepository) Update(p *entity.Product) error {
 	return nil
 }
 
-func (pg *pgRepository) Delete(id uuid.UUID) error {
+func (pg *pgRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	tx, err := pg.db.Begin()
 	if err != nil {
 		return err

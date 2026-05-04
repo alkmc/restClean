@@ -15,7 +15,6 @@ import (
 	"github.com/alkmc/restClean/pkg/repository"
 	"github.com/alkmc/restClean/pkg/service"
 	"github.com/alkmc/restClean/pkg/validator"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -486,13 +485,13 @@ func setup(t *testing.T) {
 }
 
 func addProd(t *testing.T, p entity.Product) {
-	if _, err := pRepo.Save(&p); err != nil {
+	if _, err := pRepo.Save(t.Context(), &p); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func tearDown(t *testing.T, ID uuid.UUID) {
-	if err := pRepo.Delete(ID); err != nil {
+	if err := pRepo.Delete(t.Context(), ID); err != nil {
 		t.Fatal(err)
 	}
 }
