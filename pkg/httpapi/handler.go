@@ -1,4 +1,4 @@
-package controller
+package httpapi
 
 import (
 	"context"
@@ -17,22 +17,22 @@ import (
 
 const timeout = 2 * time.Second
 
-type productController struct {
+type Handler struct {
 	productService   service.Service
 	productCache     cache.Cache
 	productValidator validator.Validator
 }
 
-// NewController returns Product Controller
-func NewController(s service.Service, c cache.Cache, v validator.Validator) Controller {
-	return &productController{
+// NewHandler returns Product Controller
+func NewHandler(s service.Service, c cache.Cache, v validator.Validator) *Handler {
+	return &Handler{
 		productService:   s,
 		productCache:     c,
 		productValidator: v,
 	}
 }
 
-func (c *productController) GetByID(w http.ResponseWriter, r *http.Request) {
+func (c *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := c.validID(idStr)
 	if err != nil {
@@ -57,7 +57,7 @@ func (c *productController) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *productController) Get(w http.ResponseWriter, r *http.Request) {
+func (c *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), timeout)
 	defer cancel()
 
@@ -78,7 +78,7 @@ func (c *productController) Get(w http.ResponseWriter, r *http.Request) {
 	renderer.JSON(w, http.StatusOK, products)
 }
 
-func (c *productController) Add(w http.ResponseWriter, r *http.Request) {
+func (c *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	var p entity.Product
 	if err := c.decode(r, &p); err != nil {
 		err.Encode(w)
@@ -106,7 +106,7 @@ func (c *productController) Add(w http.ResponseWriter, r *http.Request) {
 	renderer.JSON(w, http.StatusCreated, result)
 }
 
-func (c *productController) Delete(w http.ResponseWriter, r *http.Request) {
+func (c *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := c.validID(idStr)
 	if err != nil {
@@ -137,7 +137,7 @@ func (c *productController) Delete(w http.ResponseWriter, r *http.Request) {
 	renderer.JSON(w, http.StatusOK, confirmation)
 }
 
-func (c *productController) Update(w http.ResponseWriter, r *http.Request) {
+func (c *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := c.validID(idStr)
 	if err != nil {
@@ -179,11 +179,11 @@ func (c *productController) Update(w http.ResponseWriter, r *http.Request) {
 	p.JSON(w)
 }
 
-func (c *productController) findProduct(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
+func (c *Handler) findProduct(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
 	return c.productService.FindByID(ctx, id)
 }
 
-func (c *productController) validID(id string) (uuid.UUID, *serviceerr.ServiceError) {
+func (c *Handler) validID(id string) (uuid.UUID, *serviceerr.ServiceError) {
 	uid, err := c.productValidator.UUID(id)
 	if err != nil {
 		return uuid.Nil, serviceerr.Input(err.Error())
@@ -191,7 +191,7 @@ func (c *productController) validID(id string) (uuid.UUID, *serviceerr.ServiceEr
 	return uid, nil
 }
 
-func (c *productController) decode(r *http.Request, p *entity.Product) *serviceerr.ServiceError {
+func (c *Handler) decode(r *http.Request, p *entity.Product) *serviceerr.ServiceError {
 	if err := renderer.Decode(r.Body, &p); err != nil {
 		valErr := c.productValidator.Body(err)
 		return serviceerr.Body(valErr.Error())
