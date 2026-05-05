@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/alkmc/restClean/internal/entity"
-
 	"github.com/redis/go-redis/v9"
 )
 

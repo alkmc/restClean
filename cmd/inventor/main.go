@@ -44,7 +44,7 @@ func run(logger *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	repo, err := repository.NewPG(logger) // can be set to repository.NewSQLite(logger)
+	repo, err := repository.NewPG(ctx, logger)
 	if err != nil {
 		return err
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/alkmc/restClean/internal/entity"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestValidator_Product(t *testing.T) {
@@ -45,7 +46,7 @@ func TestValidator_Product(t *testing.T) {
 			if tt.wantErr != "" {
 				assert.EqualError(t, err, tt.wantErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, tt.product.ID)
 			}
 		})
@@ -77,10 +78,10 @@ func TestValidator_UUID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			uid, err := v.UUID(tt.uuid)
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Equal(t, uuid.Nil, uid)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, validUUID, uid.String())
 			}
 		})
