@@ -6,8 +6,6 @@ import (
 
 	"github.com/alkmc/restClean/internal/entity"
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestValidator_Product(t *testing.T) {
@@ -25,17 +23,17 @@ func TestValidator_Product(t *testing.T) {
 		},
 		{
 			name:    "empty name",
-			product: &entity.Product{Name: "", Price: 1.1},
+			product: new(entity.Product{Name: "", Price: 1.1}),
 			wantErr: "the product name is empty",
 		},
 		{
 			name:    "negative price",
-			product: &entity.Product{Name: "Car", Price: -1.0},
+			product: new(entity.Product{Name: "Car", Price: -1.0}),
 			wantErr: "the product price must be positive",
 		},
 		{
 			name:    "success",
-			product: &entity.Product{Name: "Car", Price: 10.5},
+			product: new(entity.Product{Name: "Car", Price: 10.5}),
 			wantErr: "",
 		},
 	}
@@ -44,10 +42,13 @@ func TestValidator_Product(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := v.Product(tt.product)
 			if tt.wantErr != "" {
-				assert.EqualError(t, err, tt.wantErr)
+				if err == nil || err.Error() != tt.wantErr {
+					t.Errorf("got error %v, want %v", err, tt.wantErr)
+				}
 			} else {
-				require.NoError(t, err)
-				assert.NotNil(t, tt.product.ID)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 			}
 		})
 	}
@@ -78,11 +79,19 @@ func TestValidator_UUID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			uid, err := v.UUID(tt.uuid)
 			if tt.wantErr {
-				require.Error(t, err)
-				assert.Equal(t, uuid.Nil, uid)
+				if err == nil {
+					t.Fatalf("expected error")
+				}
+				if uid != uuid.Nil {
+					t.Errorf("got %v, want %v", uid, uuid.Nil)
+				}
 			} else {
-				require.NoError(t, err)
-				assert.Equal(t, validUUID, uid.String())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if uid.String() != validUUID {
+					t.Errorf("got %v, want %v", uid.String(), validUUID)
+				}
 			}
 		})
 	}
