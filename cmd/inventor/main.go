@@ -55,13 +55,13 @@ func run(logger *slog.Logger) error {
 	valid := validator.NewValidator()
 	h := httpapi.NewHandler(logger, srv, rCache, valid)
 
-	s := &http.Server{
+	s := new(http.Server{
 		Addr:         port,
 		Handler:      httpapi.NewMux(logger, h),
 		ReadTimeout:  readTimeout,
 		WriteTimeout: writeTimeout,
 		IdleTimeout:  keepAlive,
-	}
+	})
 
 	var wg sync.WaitGroup
 	wg.Go(func() {

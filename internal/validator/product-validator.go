@@ -12,7 +12,7 @@ type productValidator struct {
 
 // NewValidator returns new Product Validator
 func NewValidator() Validator {
-	return &productValidator{}
+	return new(productValidator{})
 }
 
 func (v *productValidator) Product(p *entity.Product) error {

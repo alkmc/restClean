@@ -36,7 +36,7 @@ func NewPG(ctx context.Context, l *slog.Logger) (Repository, error) {
 	if _, err := pdb.ExecContext(ctx, sqlSchema); err != nil {
 		l.Error("failed to execute sql schema", slog.Any("error", err), slog.String("schema", sqlSchema))
 	}
-	return &pgRepository{logger: l, db: pdb}, nil
+	return new(pgRepository{logger: l, db: pdb}), nil
 }
 
 func (pg *pgRepository) CloseDB() {
