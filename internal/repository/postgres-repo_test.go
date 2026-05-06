@@ -168,7 +168,7 @@ func TestRepository_FindAll(t *testing.T) {
 	defer cleanup()
 	ctx := t.Context()
 
-	res, err := repo.FindAll(ctx)
+	res, err := repo.FindAll(ctx, 50, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -183,7 +183,7 @@ func TestRepository_FindAll(t *testing.T) {
 		t.Fatalf("failed to save product 2: %v", err)
 	}
 
-	res, err = repo.FindAll(ctx)
+	res, err = repo.FindAll(ctx, 50, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

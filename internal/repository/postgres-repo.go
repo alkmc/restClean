@@ -78,8 +78,8 @@ func (pg *pgRepository) FindByID(ctx context.Context, id uuid.UUID) (*entity.Pro
 	return &p, nil
 }
 
-func (pg *pgRepository) FindAll(ctx context.Context) ([]entity.Product, error) {
-	rows, err := pg.db.QueryContext(ctx, queryGetAll)
+func (pg *pgRepository) FindAll(ctx context.Context, limit, offset int) ([]entity.Product, error) {
+	rows, err := pg.db.QueryContext(ctx, queryGetAll, limit, offset)
 	if err != nil {
 		return nil, err
 	}
