@@ -26,6 +26,7 @@ func setupTestContainerDB(t *testing.T) (*pgRepository, func()) {
 		postgres.WithDatabase(dbName),
 		postgres.WithUsername(dbUser),
 		postgres.WithPassword(dbPassword),
+		postgres.WithInitScripts("../../migrations/1_create_tables_up.sql"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).

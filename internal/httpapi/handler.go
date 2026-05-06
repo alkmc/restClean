@@ -98,9 +98,8 @@ func (c *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, "failed to fetch products")
 		return
 	}
-	if len(products) == 0 {
-		respond(w, http.StatusOK, map[string]string{"message": "no products found"})
-		return
+	if products == nil {
+		products = []entity.Product{}
 	}
 	respond(w, http.StatusOK, products)
 }

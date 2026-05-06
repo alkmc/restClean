@@ -174,7 +174,7 @@ func TestGetProducts(t *testing.T) {
 				}
 			},
 			expectedStatus: http.StatusOK,
-			expectedMsg:    "no products found",
+			expectedNames:  []string{},
 		},
 		{
 			name: "success",

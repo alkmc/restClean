@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/alkmc/restClean/internal/entity"
 	"github.com/google/uuid"
@@ -25,7 +26,11 @@ func NewService(r repository) *service {
 }
 
 func (s *service) Create(ctx context.Context, p *entity.Product) (*entity.Product, error) {
-	p.ID = uuid.New()
+	id, err := uuid.NewV7()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate uuid: %w", err)
+	}
+	p.ID = id
 	return s.repo.Save(ctx, p)
 }
 
