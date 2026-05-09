@@ -4,6 +4,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"testing"
 	"time"
@@ -173,8 +174,8 @@ func TestRepository_FindByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p, err := repo.FindByID(ctx, tt.id)
 			if tt.wantErr {
-				if err == nil {
-					t.Fatalf("expected error")
+				if !errors.Is(err, entity.ErrNotFound) {
+					t.Fatalf("expected entity.ErrNotFound, got %v", err)
 				}
 			} else {
 				if err != nil {
@@ -230,9 +231,10 @@ func TestRepository_Update(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		product *entity.Product
-		wantErr bool
+		name      string
+		product   *entity.Product
+		wantErr   bool
+		wantErrIs error
 	}{
 		{
 			name:    "success",
@@ -244,6 +246,12 @@ func TestRepository_Update(t *testing.T) {
 			product: new(entity.Product{ID: id, Name: "NewName", Price: -1.0}),
 			wantErr: true,
 		},
+		{
+			name:      "non-existing product returns ErrNotFound",
+			product:   new(entity.Product{ID: uuid.Must(uuid.NewV7()), Name: "Ghost", Price: 1.0}),
+			wantErr:   true,
+			wantErrIs: entity.ErrNotFound,
+		},
 	}
 
 	for _, tt := range tests {
@@ -252,6 +260,9 @@ func TestRepository_Update(t *testing.T) {
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("expected error")
+				}
+				if tt.wantErrIs != nil && !errors.Is(err, tt.wantErrIs) {
+					t.Fatalf("expected %v, got %v", tt.wantErrIs, err)
 				}
 			} else {
 				if err != nil {
@@ -289,22 +300,27 @@ func TestRepository_Delete(t *testing.T) {
 			id:      id,
 			wantErr: false,
 		},
+		{
+			name:    "non-existing product returns ErrNotFound",
+			id:      uuid.Must(uuid.NewV7()),
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := repo.Delete(ctx, tt.id)
 			if tt.wantErr {
-				if err == nil {
-					t.Fatalf("expected error")
+				if !errors.Is(err, entity.ErrNotFound) {
+					t.Fatalf("expected entity.ErrNotFound, got %v", err)
 				}
 			} else {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
 				_, err = repo.FindByID(ctx, tt.id)
-				if err == nil {
-					t.Fatalf("expected error (Not Found) after deletion")
+				if !errors.Is(err, entity.ErrNotFound) {
+					t.Fatalf("expected entity.ErrNotFound after deletion, got %v", err)
 				}
 			}
 		})

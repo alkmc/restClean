@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -80,6 +81,9 @@ func (pg *Repository) FindByID(ctx context.Context, id uuid.UUID) (*entity.Produ
 
 	var p entity.Product
 	if err := row.Scan(&p.ID, &p.Name, &p.Price); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, entity.ErrNotFound
+		}
 		return nil, err
 	}
 	return &p, nil
@@ -121,11 +125,21 @@ func (pg *Repository) Update(ctx context.Context, p *entity.Product) error {
 	}
 	defer stmt.Close()
 
-	if _, err := stmt.ExecContext(ctx, p.ID, p.Name, p.Price); err != nil {
+	res, err := stmt.ExecContext(ctx, p.ID, p.Name, p.Price)
+	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			return fmt.Errorf("failed to rollback transaction: %w", rollbackErr)
 		}
 		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if rows == 0 {
+		_ = tx.Rollback()
+		return entity.ErrNotFound
 	}
 	if err := tx.Commit(); err != nil {
 		return err
@@ -146,11 +160,21 @@ func (pg *Repository) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 	defer stmt.Close()
 
-	if _, err = stmt.ExecContext(ctx, id); err != nil {
+	res, err := stmt.ExecContext(ctx, id)
+	if err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			return fmt.Errorf("failed to rollback transaction: %w", rollbackErr)
 		}
 		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if rows == 0 {
+		_ = tx.Rollback()
+		return entity.ErrNotFound
 	}
 	if err := tx.Commit(); err != nil {
 		return err

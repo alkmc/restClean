@@ -2,11 +2,31 @@ package service
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
+	"github.com/alkmc/restClean/internal/cache"
 	"github.com/alkmc/restClean/internal/entity"
 	"github.com/google/uuid"
 )
+
+type mockCache struct{}
+
+func (mockCache) Set(_ context.Context, _ string, _ entity.Product) error {
+	return nil
+}
+
+func (mockCache) Get(_ context.Context, _ string) (entity.Product, error) {
+	return entity.Product{}, cache.ErrCacheMiss
+}
+
+func (mockCache) Invalidate(_ context.Context, _ string) error {
+	return nil
+}
+
+func newTestService(repo repository) *Service {
+	return NewService(slog.New(slog.DiscardHandler), repo, mockCache{})
+}
 
 type MockRepository struct {
 	SaveFn     func(ctx context.Context, p *entity.Product) (*entity.Product, error)
@@ -74,7 +94,7 @@ func TestService_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(MockRepository{})
 			tt.mockSetup(mockRepo)
-			srv := NewService(mockRepo)
+			srv := newTestService(mockRepo)
 
 			res, err := srv.Create(ctx, tt.product)
 			if tt.wantErr {
@@ -119,7 +139,7 @@ func TestService_FindByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(MockRepository{})
 			tt.mockSetup(mockRepo)
-			srv := NewService(mockRepo)
+			srv := newTestService(mockRepo)
 
 			res, err := srv.FindByID(ctx, tt.id)
 			if tt.wantErr {
@@ -163,7 +183,7 @@ func TestService_FindAll(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(MockRepository{})
 			tt.mockSetup(mockRepo)
-			srv := NewService(mockRepo)
+			srv := newTestService(mockRepo)
 
 			res, err := srv.FindAll(ctx, 50, 0)
 			if tt.wantErr {
@@ -207,7 +227,7 @@ func TestService_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(MockRepository{})
 			tt.mockSetup(mockRepo)
-			srv := NewService(mockRepo)
+			srv := newTestService(mockRepo)
 
 			err := srv.Update(ctx, tt.product)
 			if tt.wantErr {
@@ -249,7 +269,7 @@ func TestService_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(MockRepository{})
 			tt.mockSetup(mockRepo)
-			srv := NewService(mockRepo)
+			srv := newTestService(mockRepo)
 
 			err := srv.Delete(ctx, tt.id)
 			if tt.wantErr {
