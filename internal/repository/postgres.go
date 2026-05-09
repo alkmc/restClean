@@ -50,43 +50,43 @@ func (pg *Repository) CloseDB() {
 	pg.logger.Info("connection to db closed")
 }
 
-func (pg *Repository) Save(ctx context.Context, p *entity.Product) (*entity.Product, error) {
+func (pg *Repository) Save(ctx context.Context, p entity.Product) (entity.Product, error) {
 	tx, err := pg.db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, err
+		return entity.Product{}, err
 	}
 
 	stmt, err := tx.PrepareContext(ctx, queryInsert)
 	if err != nil {
 		_ = tx.Rollback()
-		return nil, err
+		return entity.Product{}, err
 	}
 	defer stmt.Close()
 
 	if _, err := stmt.ExecContext(ctx, p.ID, p.Name, p.Price); err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			return nil, fmt.Errorf("failed to rollback transaction: %w", rollbackErr)
+			return entity.Product{}, fmt.Errorf("failed to rollback transaction: %w", rollbackErr)
 		}
-		return nil, err
+		return entity.Product{}, err
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, err
+		return entity.Product{}, err
 	}
 	return p, nil
 }
 
-func (pg *Repository) FindByID(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
+func (pg *Repository) FindByID(ctx context.Context, id uuid.UUID) (entity.Product, error) {
 	row := pg.db.QueryRowContext(ctx, queryGetByID, id)
 
 	var p entity.Product
 	if err := row.Scan(&p.ID, &p.Name, &p.Price); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, entity.ErrNotFound
+			return entity.Product{}, entity.ErrNotFound
 		}
-		return nil, err
+		return entity.Product{}, err
 	}
-	return &p, nil
+	return p, nil
 }
 
 func (pg *Repository) FindAll(ctx context.Context, limit, offset int) ([]entity.Product, error) {
@@ -112,7 +112,7 @@ func (pg *Repository) FindAll(ctx context.Context, limit, offset int) ([]entity.
 	return products, nil
 }
 
-func (pg *Repository) Update(ctx context.Context, p *entity.Product) error {
+func (pg *Repository) Update(ctx context.Context, p entity.Product) error {
 	tx, err := pg.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err

@@ -13,10 +13,10 @@ import (
 
 type (
 	repository interface {
-		Save(context.Context, *entity.Product) (*entity.Product, error)
-		FindByID(context.Context, uuid.UUID) (*entity.Product, error)
+		Save(context.Context, entity.Product) (entity.Product, error)
+		FindByID(context.Context, uuid.UUID) (entity.Product, error)
 		FindAll(ctx context.Context, limit, offset int) ([]entity.Product, error)
-		Update(context.Context, *entity.Product) error
+		Update(context.Context, entity.Product) error
 		Delete(context.Context, uuid.UUID) error
 	}
 
@@ -38,27 +38,27 @@ func NewService(l *slog.Logger, r repository, c cacher) *Service {
 	return new(Service{logger: l, repo: r, cache: c})
 }
 
-func (s *Service) Create(ctx context.Context, p *entity.Product) (*entity.Product, error) {
+func (s *Service) Create(ctx context.Context, p entity.Product) (entity.Product, error) {
 	id, err := uuid.NewV7()
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate uuid: %w", err)
+		return entity.Product{}, fmt.Errorf("failed to generate uuid: %w", err)
 	}
 	p.ID = id
 	saved, err := s.repo.Save(ctx, p)
 	if err != nil {
-		return nil, err
+		return entity.Product{}, err
 	}
-	if err := s.cache.Set(ctx, saved.ID.String(), *saved); err != nil {
+	if err := s.cache.Set(ctx, saved.ID.String(), saved); err != nil {
 		s.logger.Warn("cache set failed", slog.Any("error", err), slog.String("key", saved.ID.String()))
 	}
 	return saved, nil
 }
 
-func (s *Service) FindByID(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
+func (s *Service) FindByID(ctx context.Context, id uuid.UUID) (entity.Product, error) {
 	key := id.String()
 	cached, err := s.cache.Get(ctx, key)
 	if err == nil {
-		return &cached, nil
+		return cached, nil
 	}
 	if !errors.Is(err, cache.ErrCacheMiss) {
 		s.logger.Warn("cache get failed", slog.Any("error", err), slog.String("key", key))
@@ -66,9 +66,9 @@ func (s *Service) FindByID(ctx context.Context, id uuid.UUID) (*entity.Product, 
 
 	p, err := s.repo.FindByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return entity.Product{}, err
 	}
-	if err := s.cache.Set(ctx, key, *p); err != nil {
+	if err := s.cache.Set(ctx, key, p); err != nil {
 		s.logger.Warn("cache set failed", slog.Any("error", err), slog.String("key", key))
 	}
 	return p, nil
@@ -78,7 +78,7 @@ func (s *Service) FindAll(ctx context.Context, limit, offset int) ([]entity.Prod
 	return s.repo.FindAll(ctx, limit, offset)
 }
 
-func (s *Service) Update(ctx context.Context, p *entity.Product) error {
+func (s *Service) Update(ctx context.Context, p entity.Product) error {
 	if err := s.repo.Update(ctx, p); err != nil {
 		return err
 	}

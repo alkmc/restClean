@@ -20,10 +20,10 @@ const (
 
 type (
 	processor interface {
-		Create(context.Context, *entity.Product) (*entity.Product, error)
-		FindByID(context.Context, uuid.UUID) (*entity.Product, error)
+		Create(context.Context, entity.Product) (entity.Product, error)
+		FindByID(context.Context, uuid.UUID) (entity.Product, error)
 		FindAll(ctx context.Context, limit, offset int) ([]entity.Product, error)
-		Update(context.Context, *entity.Product) error
+		Update(context.Context, entity.Product) error
 		Delete(context.Context, uuid.UUID) error
 	}
 
@@ -69,7 +69,7 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
-	respond(w, http.StatusOK, toProductResponse(*p))
+	respond(w, http.StatusOK, toProductResponse(p))
 }
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
@@ -113,13 +113,13 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.requestTimeout)
 	defer cancel()
 
-	result, err := h.processor.Create(ctx, &p)
+	result, err := h.processor.Create(ctx, p)
 	if err != nil {
 		h.logger.Error("failed to create product", slog.Any("error", err))
 		respondError(w, http.StatusInternalServerError, "error saving the product")
 		return
 	}
-	respond(w, http.StatusCreated, toProductResponse(*result))
+	respond(w, http.StatusCreated, toProductResponse(result))
 }
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +167,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.requestTimeout)
 	defer cancel()
 
-	if err := h.processor.Update(ctx, &p); err != nil {
+	if err := h.processor.Update(ctx, p); err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
 			respondError(w, http.StatusNotFound, "unable to update product, which does not exist")
 			return

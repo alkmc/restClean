@@ -29,19 +29,19 @@ func newTestService(repo repository) *Service {
 }
 
 type MockRepository struct {
-	SaveFn     func(ctx context.Context, p *entity.Product) (*entity.Product, error)
-	FindByIDFn func(ctx context.Context, id uuid.UUID) (*entity.Product, error)
+	SaveFn     func(ctx context.Context, p entity.Product) (entity.Product, error)
+	FindByIDFn func(ctx context.Context, id uuid.UUID) (entity.Product, error)
 	FindAllFn  func(ctx context.Context, limit, offset int) ([]entity.Product, error)
-	UpdateFn   func(ctx context.Context, p *entity.Product) error
+	UpdateFn   func(ctx context.Context, p entity.Product) error
 	DeleteFn   func(ctx context.Context, id uuid.UUID) error
 	CloseDBFn  func()
 }
 
-func (m *MockRepository) Save(ctx context.Context, p *entity.Product) (*entity.Product, error) {
+func (m *MockRepository) Save(ctx context.Context, p entity.Product) (entity.Product, error) {
 	return m.SaveFn(ctx, p)
 }
 
-func (m *MockRepository) FindByID(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
+func (m *MockRepository) FindByID(ctx context.Context, id uuid.UUID) (entity.Product, error) {
 	return m.FindByIDFn(ctx, id)
 }
 
@@ -49,7 +49,7 @@ func (m *MockRepository) FindAll(ctx context.Context, limit, offset int) ([]enti
 	return m.FindAllFn(ctx, limit, offset)
 }
 
-func (m *MockRepository) Update(ctx context.Context, p *entity.Product) error {
+func (m *MockRepository) Update(ctx context.Context, p entity.Product) error {
 	if m.UpdateFn != nil {
 		return m.UpdateFn(ctx, p)
 	}
@@ -74,15 +74,15 @@ func TestService_Create(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		product   *entity.Product
+		product   entity.Product
 		mockSetup func(*MockRepository)
 		wantErr   bool
 	}{
 		{
 			name:    "success",
-			product: new(entity.Product{Name: "Test", Price: 10.0}),
+			product: entity.Product{Name: "Test", Price: 10.0},
 			mockSetup: func(m *MockRepository) {
-				m.SaveFn = func(_ context.Context, p *entity.Product) (*entity.Product, error) {
+				m.SaveFn = func(_ context.Context, p entity.Product) (entity.Product, error) {
 					return p, nil
 				}
 			},
@@ -127,8 +127,8 @@ func TestService_FindByID(t *testing.T) {
 			name: "success",
 			id:   id,
 			mockSetup: func(m *MockRepository) {
-				m.FindByIDFn = func(_ context.Context, id uuid.UUID) (*entity.Product, error) {
-					return new(entity.Product{ID: id, Name: "Test"}), nil
+				m.FindByIDFn = func(_ context.Context, id uuid.UUID) (entity.Product, error) {
+					return entity.Product{ID: id, Name: "Test"}, nil
 				}
 			},
 			wantErr: false,
@@ -207,15 +207,15 @@ func TestService_Update(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		product   *entity.Product
+		product   entity.Product
 		mockSetup func(*MockRepository)
 		wantErr   bool
 	}{
 		{
 			name:    "success",
-			product: new(entity.Product{Name: "Update"}),
+			product: entity.Product{Name: "Update"},
 			mockSetup: func(m *MockRepository) {
-				m.UpdateFn = func(_ context.Context, _ *entity.Product) error {
+				m.UpdateFn = func(_ context.Context, _ entity.Product) error {
 					return nil
 				}
 			},
