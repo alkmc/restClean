@@ -39,10 +39,11 @@ type (
 		ConnMaxLifetime time.Duration `env:"PG_CONN_MAX_LIFETIME" envDefault:"30m"`
 	}
 	Redis struct {
-		Host string        `env:"REDIS_HOST,required"`
-		Port int           `env:"REDIS_PORT,required"`
-		DB   int           `env:"REDIS_DB" envDefault:"0"`
-		TTL  time.Duration `env:"REDIS_CACHE_TTL" envDefault:"10s"`
+		Host     string        `env:"REDIS_HOST,required"`
+		Port     int           `env:"REDIS_PORT,required"`
+		Password Secret        `env:"REDIS_PASSWORD,required,unset"`
+		DB       int           `env:"REDIS_DB" envDefault:"0"`
+		TTL      time.Duration `env:"REDIS_CACHE_TTL" envDefault:"10s"`
 	}
 	Log struct {
 		Level slog.Level `env:"LOG_LEVEL" envDefault:"INFO"`
