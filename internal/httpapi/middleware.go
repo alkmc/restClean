@@ -1,7 +1,6 @@
 package httpapi
 
 import (
-	"cmp"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -63,7 +62,6 @@ func compress(minBytes int) (Middleware, error) {
 
 // logging logs method, path, status, and request duration.
 func logging(logger *slog.Logger) Middleware {
-	logger = cmp.Or(logger, slog.Default())
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
@@ -83,7 +81,6 @@ func logging(logger *slog.Logger) Middleware {
 
 // recoverer catches panics and prevents the server from crashing
 func recoverer(logger *slog.Logger) Middleware {
-	logger = cmp.Or(logger, slog.Default())
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
